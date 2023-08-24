@@ -11,7 +11,7 @@ class crmDocument(models.Model):
 class Customer(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
     email = models.EmailField(null=False, blank=False)
-    documents = models.ManyToManyField(crmDocument, related_name='customers')
+    documents = models.ManyToManyField(crmDocument, related_name='customers', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -23,9 +23,12 @@ class CustomerType(DjangoObjectType):
     
 
 
-
 class Customers(graphene.ObjectType):
-    pass
+    customers = graphene.List(CustomerType)
+
+    def resolve_customers(self, info,  **kwargs):
+        customs = Customer.objects.all()
+        return customs
 
 class DeleteCustomer(graphene.Mutation):
     class Arguments:
@@ -41,8 +44,8 @@ class DeleteCustomer(graphene.Mutation):
 class UpdateCustomer(graphene.Mutation):
     class Arguments:
         id = graphene.ID(required=True)
-        name = graphene.String()
-        email= graphene.String()
+        name = graphene.String(required=False)
+        email= graphene.String(required=False)
         #file_name = graphene.String()
         #file = graphene.String()  # Base64-encoded image data
 
@@ -50,6 +53,9 @@ class UpdateCustomer(graphene.Mutation):
 
     def mutate(self, info, id, **kwargs):
         customer = Customer.objects.get(pk=id)
+        for key, value in kwargs.items():
+            setattr(customer, key, value)           
+        customer.save()
         return UpdateCustomer(customer=customer)
 
 class InsertCustomer(graphene.Mutation):
@@ -82,17 +88,15 @@ class InsertCustomer(graphene.Mutation):
 
 
 
+
 class Query(Customers):
     pass
 
-class Mutation(
-    DeleteCustomer,
-    UpdateCustomer,
-    InsertCustomer,
-    graphene.ObjectType):
-    pass
-
- 
+class Mutation(graphene.ObjectType):
+    deleteCustomer = DeleteCustomer.Field()
+    updateCustomer = UpdateCustomer.Field()
+    insertCustomer = InsertCustomer.Field()
+    
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
