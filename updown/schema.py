@@ -11,7 +11,7 @@ class crmDocument(models.Model):
 class Customer(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
     email = models.EmailField(null=False, blank=False)
-    documents = models.ManyToManyField(crmDocument, related_name='customers', null=True, blank=True)
+    documents = models.ForeignKey(crmDocument, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
