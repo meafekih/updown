@@ -4,17 +4,22 @@ from django.db import models
 from django.core.files.base import ContentFile
 import base64
 
-
-class crmDocument(models.Model):
-    file = models.FileField(upload_to='crm/')
-
 class Customer(models.Model):
     name = models.CharField(max_length=100, null=False, blank=False)
     email = models.EmailField(null=False, blank=False)
-    documents = models.ForeignKey(crmDocument, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name
+    
+
+class crmDocument(models.Model):
+    file = models.FileField(upload_to='crm/')
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
+
+class CrmDocumentType(DjangoObjectType):
+    class Meta:
+        model = crmDocument
+
     
 class CustomerType(DjangoObjectType):
     class Meta:
@@ -29,6 +34,19 @@ class Customers(graphene.ObjectType):
     def resolve_customers(self, info,  **kwargs):
         customs = Customer.objects.all()
         return customs
+    
+
+class Documents(graphene.ObjectType):
+    documents = graphene.List(graphene.String, customer_id=graphene.Int())
+
+    def resolve_documents(self, info, customer_id):
+        try:
+            customer = Customer.objects.get(pk=customer_id)
+            docs = crmDocument.objects.filter(customer=customer)
+            return [doc.file.url for doc in docs]
+        except Customer.DoesNotExist:
+            return []
+
 
 class DeleteCustomer(graphene.Mutation):
     class Arguments:
@@ -58,6 +76,8 @@ class UpdateCustomer(graphene.Mutation):
         customer.save()
         return UpdateCustomer(customer=customer)
 
+
+
 class InsertCustomer(graphene.Mutation):
     class Arguments:
         name = graphene.String()
@@ -71,7 +91,7 @@ class InsertCustomer(graphene.Mutation):
         customer = Customer()
         file_names = kwargs.pop('file_names', [])
         files =kwargs.pop('files', [])
-        customer = Customer( **kwargs) 
+        customer = Customer( **kwargs)
         customer.save()   
         #customer.save()  # Save the customer to generate an ID
         #file_name = str(customer.id)  Use customer's ID as the file name
@@ -80,8 +100,8 @@ class InsertCustomer(graphene.Mutation):
                 image_data = base64.b64decode(file)
                 document = crmDocument.objects.create(file=None)
                 document.file.save(file_name, ContentFile(image_data))
+                document.customer = customer 
                 document.save()
-                customer.documents.add(document)
         customer.save()
         return InsertCustomer(customer=customer)
 
@@ -89,7 +109,7 @@ class InsertCustomer(graphene.Mutation):
 
 
 
-class Query(Customers):
+class Query(Customers,Documents):
     pass
 
 class Mutation(graphene.ObjectType):

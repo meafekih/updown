@@ -7,10 +7,14 @@ mutation = '''
 mutation insertCustomer(
   $name: String!,
   $email: String!,
+  $fileNames: [String],
+  $files: [String]
 ) {
   insertCustomer(
     name: $name,
     email: $email,
+    fileNames: $fileNames,
+    files: $files
   ) {
     customer {
       id
@@ -21,11 +25,19 @@ mutation insertCustomer(
 }
 '''
 
+file_names = ["c.pdf", "d.png"]
 
 variables = {
     'name': 'John',
     'email': 'John@example.com',
+    'fileNames': file_names,
+    'files': []
 }
+
+for file_name in file_names:
+    with open('docs/' + file_name, 'rb') as image_file:
+        image_data = base64.b64encode(image_file.read()).decode('utf-8')
+        variables['files'].append(image_data)
 
 request_payload = {
     'query': mutation,
