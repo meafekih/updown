@@ -25,17 +25,17 @@ mutation insertCustomer(
 }
 '''
 
-file_names = ["c.pdf", "d.png"]
+file_names = ["a.pdf", "b.png"]
 
 variables = {
-    'name': 'John',
-    'email': 'John@example.com',
+    'name': 'ccc',
+    'email': 'ccc@example.com',
     'fileNames': file_names,
     'files': []
 }
 
 for file_name in file_names:
-    with open('docs/' + file_name, 'rb') as image_file:
+    with open('Requests/docs/' + file_name, 'rb') as image_file:
         image_data = base64.b64encode(image_file.read()).decode('utf-8')
         variables['files'].append(image_data)
 

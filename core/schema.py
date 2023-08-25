@@ -1,7 +1,7 @@
 
 import graphene
-from updown.queries import (Customers, Documents, )
-from updown.mutations import (DeleteCustomer, UpdateCustomer,
+from apps.updown.queries import (Customers, Documents, )
+from apps.updown.mutations import (DeleteCustomer, UpdateCustomer,
     InsertCustomer, )
 
 
