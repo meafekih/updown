@@ -1,10 +1,9 @@
 import requests
 
-# Your GraphQL API endpoint
-
 server = 'http://127.0.0.1:8000/' 
 url = server + 'api/' 
 customer_id = 9 
+
 graphql_query = '''
 query GetDocuments($customerId: Int!) {
   documents(customerId: $customerId)
@@ -16,7 +15,6 @@ variables = {
 
 response = requests.post(url, json={'query': graphql_query, 'variables': variables})
 data = response.json()
-
 document_urls = data.get('data', {}).get('documents')
 
 if document_urls:
